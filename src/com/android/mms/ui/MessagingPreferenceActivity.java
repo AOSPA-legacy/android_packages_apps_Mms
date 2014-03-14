@@ -101,6 +101,8 @@ public class MessagingPreferenceActivity extends PreferenceActivity
     // Privacy mode
     public static final String PRIVACY_MODE_ENABLED = "pref_key_enable_privacy_mode";
 
+    public static final String SMART_DIALER_ENABLED = "pref_key_mms_smart_dialer";
+
     // Keyboard input type
     public static final String INPUT_TYPE                = "pref_key_mms_input_type";
 
@@ -140,6 +142,7 @@ public class MessagingPreferenceActivity extends PreferenceActivity
     private CheckBoxPreference mEnablePrivacyModePref;
     private CheckBoxPreference mEnableEmoticonsPref;
     private CheckBoxPreference mMmsAutoRetrievialPref;
+    private CheckBoxPreference mSmartCall;
     private RingtonePreference mRingtonePref;
     private Recycler mSmsRecycler;
     private Recycler mMmsRecycler;
@@ -208,6 +211,7 @@ public class MessagingPreferenceActivity extends PreferenceActivity
         mSmsPrefCategory.setEnabled(mIsSmsEnabled);
         mMmsPrefCategory.setEnabled(mIsSmsEnabled);
         mNotificationPrefCategory.setEnabled(mIsSmsEnabled);
+        mSmartCall.setEnabled(mIsSmsEnabled);
     }
 
     private void loadPrefs() {
@@ -234,6 +238,7 @@ public class MessagingPreferenceActivity extends PreferenceActivity
         mEnableNotificationsPref = (CheckBoxPreference) findPreference(NOTIFICATION_ENABLED);
         mMmsAutoRetrievialPref = (CheckBoxPreference) findPreference(AUTO_RETRIEVAL);
         mEnablePrivacyModePref = (CheckBoxPreference) findPreference(PRIVACY_MODE_ENABLED);
+        mSmartCall = (CheckBoxPreference) findPreference(SMART_DIALER_ENABLED);
         mVibratePref = (CheckBoxPreference) findPreference(NOTIFICATION_VIBRATE);
         mRingtonePref = (RingtonePreference) findPreference(NOTIFICATION_RINGTONE);
 
@@ -332,6 +337,9 @@ public class MessagingPreferenceActivity extends PreferenceActivity
         setEnabledQmLockscreenPref();
         setEnabledQmCloseAllPref();
         setEnabledQmDarkThemePref();
+
+        // smart dialer
+        setEnabledSmartCallPref();
 
         // If needed, migrate vibration setting from the previous tri-state setting stored in
         // NOTIFICATION_VIBRATE_WHEN to the boolean setting stored in NOTIFICATION_VIBRATE.
@@ -436,6 +444,11 @@ public class MessagingPreferenceActivity extends PreferenceActivity
         mEnableQmDarkThemePref.setEnabled(!isPrivacyModeEnabled);
     }
 
+    private void setEnabledSmartCallPref() {
+        boolean isSmartCallEnabled = getSmartCallEnabled(this);
+        mSmartCall.setChecked(isSmartCallEnabled);
+    }
+
     private void setEnabledQuickMessagePref() {
         // The "enable quickmessage" setting is really stored in our own prefs. Read the
         // current value and set the checkbox to match.
@@ -536,7 +549,8 @@ public class MessagingPreferenceActivity extends PreferenceActivity
 
             // Update "enable dark theme" checkbox state
             mEnableQmDarkThemePref.setEnabled(!mEnablePrivacyModePref.isChecked());
-
+        } else if (preference == mSmartCall) {
+            enableSmartDialer(mSmartCall.isChecked(), this);
         } else if (preference == mEnableQuickMessagePref) {
             // Update the actual "enable quickmessage" value that is stored in secure settings.
             enableQuickMessage(mEnableQuickMessagePref.isChecked(), this);
@@ -639,6 +653,20 @@ public class MessagingPreferenceActivity extends PreferenceActivity
         SharedPreferences.Editor editor =
             PreferenceManager.getDefaultSharedPreferences(context).edit();
         editor.putBoolean(MessagingPreferenceActivity.PRIVACY_MODE_ENABLED, enabled);
+        editor.apply();
+    }
+
+    public static boolean getSmartCallEnabled(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean smartCallEnabled =
+            prefs.getBoolean(MessagingPreferenceActivity.SMART_DIALER_ENABLED, false);
+        return smartCallEnabled;
+    }
+
+    public static void enableSmartDialer(boolean enabled, Context context) {
+        SharedPreferences.Editor editor =
+            PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putBoolean(MessagingPreferenceActivity.SMART_DIALER_ENABLED, enabled);
         editor.apply();
     }
 
